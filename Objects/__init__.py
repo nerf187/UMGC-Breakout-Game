@@ -1,0 +1,3 @@
+#
+# Objects package init
+#
