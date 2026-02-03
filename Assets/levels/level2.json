@@ -1,0 +1,23 @@
+{
+  "width": 800,
+  "height": 600,
+  "tile_size": 40,
+  "blocks": [
+    {"x": 6, "y": 4, "type": "normal", "hp": 1, "score": 100, "color": "#7E57C2", "width": 50, "height": 20},
+    {"x": 8, "y": 4, "type": "normal", "hp": 1, "score": 100, "color": "#7E57C2", "width": 50, "height": 20},
+    {"x": 10, "y": 4, "type": "normal", "hp": 1, "score": 100, "color": "#7E57C2", "width": 50, "height": 20},
+    {"x": 12, "y": 4, "type": "normal", "hp": 1, "score": 100, "color": "#7E57C2", "width": 50, "height": 20},
+    {"x": 7, "y": 5, "type": "normal", "hp": 1, "score": 100, "color": "#26C6DA", "width": 50, "height": 20},
+    {"x": 9, "y": 5, "type": "normal", "hp": 1, "score": 100, "color": "#26C6DA", "width": 50, "height": 20},
+    {"x": 11, "y": 5, "type": "normal", "hp": 1, "score": 100, "color": "#26C6DA", "width": 50, "height": 20},
+    {"x": 13, "y": 5, "type": "normal", "hp": 1, "score": 100, "color": "#26C6DA", "width": 50, "height": 20},
+    {"x": 6, "y": 6, "type": "normal", "hp": 1, "score": 100, "color": "#7E57C2", "width": 50, "height": 20},
+    {"x": 8, "y": 6, "type": "normal", "hp": 1, "score": 100, "color": "#7E57C2", "width": 50, "height": 20},
+    {"x": 10, "y": 6, "type": "normal", "hp": 1, "score": 100, "color": "#7E57C2", "width": 50, "height": 20},
+    {"x": 12, "y": 6, "type": "normal", "hp": 1, "score": 100, "color": "#7E57C2", "width": 50, "height": 20},
+    {"x": 7, "y": 7, "type": "normal", "hp": 1, "score": 100, "color": "#26C6DA", "width": 50, "height": 20},
+    {"x": 9, "y": 7, "type": "normal", "hp": 1, "score": 100, "color": "#26C6DA", "width": 50, "height": 20},
+    {"x": 11, "y": 7, "type": "normal", "hp": 1, "score": 100, "color": "#26C6DA", "width": 50, "height": 20},
+    {"x": 13, "y": 7, "type": "normal", "hp": 1, "score": 100, "color": "#26C6DA", "width": 50, "height": 20}
+  ]
+}

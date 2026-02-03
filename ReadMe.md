@@ -26,3 +26,11 @@
     - Choose the local path you want Git to operate from. Mine is connected to Documents\Github\Breakout
     - This should populate the main page with whatever is in the repository
     - Create your own branch and publish it if you'd like
+
+### Test Cases:
+    - Enter "pytest" into your terminal under the root directory to automatically run all tests as defined by pytest.ini
+    - Four .py files:
+    - Ball
+    - Block
+    - Level
+    - Paddle

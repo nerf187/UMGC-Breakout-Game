@@ -1,6 +1,11 @@
 # paddle tests: check that Paddle moves correctly, stays on screen, and reports its hitbox.
 # tests/test_paddle.py
 import pytest
+import sys
+import os
+# Allow imports from project root
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from Objects.paddle import Paddle
 import Objects.paddle as paddle_mod
 

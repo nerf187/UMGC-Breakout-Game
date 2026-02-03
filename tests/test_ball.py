@@ -2,6 +2,11 @@
 # quick tests for Ball: direction setup, movement, and hitbox
 import math
 import pytest
+import sys
+import os
+# Allow imports from project root
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from Objects.ball import Ball
 
 
