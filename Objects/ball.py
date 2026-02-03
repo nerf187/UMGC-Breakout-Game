@@ -31,3 +31,22 @@ class Ball:
 
     def __repr__(self):
         return f"Ball(x={self.x:.1f},y={self.y:.1f},vx={self.vx:.2f},vy={self.vy:.2f})"  # return string repr
+    
+    def bounce_from_paddle(self, paddle_x, paddle_width):
+        # Calculate bounce angle based on where ball hits the paddle
+        # Calculate hit position (-1 = left edge, 1 = right edge)
+        relative_x = (self.x - paddle_x) / (paddle_width / 2)
+        relative_x = max(-1, min(1, relative_x))  # Clamp to [-1, 1]
+        
+        # Set new velocity with angle based on hit position
+        angle = relative_x * 0.8  # Maximum 80 degrees from vertical
+        speed = math.hypot(self.vx, self.vy)
+        
+        self.vx = math.sin(angle) * speed
+        self.vy = -abs(math.cos(angle)) * speed  # Always bounce upward
+        
+        # Normalize to maintain consistent speed
+        mag = math.hypot(self.vx, self.vy)
+        if mag > 0:
+            self.vx /= mag
+            self.vy /= mag

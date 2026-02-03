@@ -1,6 +1,7 @@
 #
 # Auto-detect and use virtual environment if available
 #
+from enum import Enum
 import os
 import sys
 
@@ -37,6 +38,12 @@ def hex_to_rgb(hexstr: str) -> Tuple[int, int, int]:
         return (255, 255, 255)
     return tuple(int(s[i : i + 2], 16) for i in (0, 2, 4))  # return rgb tuple
 
+class GameState(Enum):
+    MENU = 1
+    PLAYING = 2
+    LEVEL_COMPLETE = 3
+    GAME_OVER = 4
+
 #
 # Simple Breakout game runner handling input, update and render.
 #
@@ -67,6 +74,19 @@ class Game:
         self.score = 0
         self.lives = 3
         self.ball_launched = False
+
+    def draw_menu(self):
+        self.screen.fill((0, 0, 0))
+        font_large = pygame.font.SysFont(None, 72)
+        font_small = pygame.font.SysFont(None, 36)
+        
+        title = font_large.render("BREAKOUT", True, (255, 255, 255))
+        start = font_small.render("Press SPACE to Start", True, (200, 200, 200))
+        
+        self.screen.blit(title, (config.SCREEN_WIDTH//2 - title.get_width()//2, 150))
+        self.screen.blit(start, (config.SCREEN_WIDTH//2 - start.get_width()//2, 250))
+        
+        pygame.display.flip()
 
     def handle_input(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
@@ -115,16 +135,17 @@ class Game:
         #
         if self.ball.y - self.ball.radius > config.SCREEN_HEIGHT:  # ball fell
             self.lives -= 1
-            #
-            # TODO: Add behavior to game over when we hit zero
-            #
+            if self.lives <= 0:
+                self.game_state = GameState.GAME_OVER
+                self.running = False  # game over
+                return
+
             self.ball_launched = False
             # reset ball above paddle
             self.ball.x = self.paddle.x
             self.ball.y = self.paddle.y - self.paddle.height / 2 - self.ball.radius - 2
             self.ball.vx = 0.0
             self.ball.vy = -1.0
-        # if self.ball.y - self.ball.radius > config.SCREEN_HEIGHT:
 
         #
         # Paddle collision (AABB vs circle simple approximation)
@@ -138,7 +159,6 @@ class Game:
             overlap_x = (self.ball.x - self.paddle.x) / (self.paddle.width / 2)
             self.ball.vx = max(-1.0, min(1.0, overlap_x))
             self.ball.vy = -abs(self.ball.vy)
-        # if (bx < px + pw and bx + bw > px and by < py + ph and by + bh > py):
 
         #
         # Block collisions
