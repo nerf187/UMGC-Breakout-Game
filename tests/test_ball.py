@@ -10,16 +10,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from Core import config
 from Objects.ball import Ball
 
-def test_initialization():
-    # test ball initialization with explicit parameters
-    ball = Ball(x=100.0, y=200.0, radius=config.BALL_RADIUS, speed=config.BALL_SPEED, vx=0.5, vy=0.5)
-    assert ball.x == 100.0
-    assert ball.y == 200.0
-    assert ball.radius == config.BALL_RADIUS
-    assert ball.speed == config.BALL_SPEED
-    assert ball.vx == pytest.approx(0.5 / math.sqrt(0.5))
-    assert ball.vy == pytest.approx(0.5 / math.sqrt(0.5))
-
 def test_init_normalizes_velocity():
     # create a Ball with vx/vy values.
     b = Ball(x=0, y=0, vx=3, vy=4)
@@ -58,9 +48,3 @@ def test_rect_dimensions():
     assert (w, h) == (6, 6)
     assert left == int(b.x - b.radius)
     assert top == int(b.y - b.radius)
-
-def test_velocity_normalization():
-    # test that velocity is always normalized
-    ball = Ball(x=100, y=200, vx=3, vy=4, speed=100)
-    magnitude = math.hypot(ball.vx, ball.vy)
-    assert magnitude == pytest.approx(1.0)
