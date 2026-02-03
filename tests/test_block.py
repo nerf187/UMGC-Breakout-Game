@@ -47,10 +47,8 @@ def test_block_destroyed_when_hp_zero():
 
 
 def test_block_multiple_hits():
-    block = Block(0, 0, 20, 10, hp=2)
+    block = Block(0, 0, 20, 10, hp=3)
 
-    block.hit()
-    destroyed = block.hit()
-
+    destroyed = [block.hit() for _ in range(3)]
     assert block.hp == 0
-    assert destroyed is True
+    assert destroyed == [False, False, True]

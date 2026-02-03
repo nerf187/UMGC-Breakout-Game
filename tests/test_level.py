@@ -7,6 +7,7 @@ import json
 # Allow imports from project root
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from Core import config
 from Objects.level import Level
 from Objects.block import Block
 
@@ -52,7 +53,7 @@ def test_all_levels_load():
     # Assumes assets/ is at project root.
     #
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    assets_dir = os.path.join(base_dir, "..", "Assets/levels")
+    assets_dir = config.LEVELS_DIR
     
     # find all level files
     level_files = []
