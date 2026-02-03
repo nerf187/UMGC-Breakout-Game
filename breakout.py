@@ -164,20 +164,36 @@ class Game:
         # Block collisions
         #
         remaining = []
-        for b in self.blocks:  # for each block
+        for b in self.blocks:
             bx, by, bw, bh = b.rect()
-            brx = self.ball.x - self.ball.radius
-            bry = self.ball.y - self.ball.radius
-            if (brx < bx + bw and brx + self.ball.radius * 2 > bx and bry < by + bh and bry + self.ball.radius * 2 > by):
+    
+            # Find closest point on block to ball
+            closest_x = max(bx, min(self.ball.x, bx + bw))
+            closest_y = max(by, min(self.ball.y, by + bh))
+    
+            # Calculate distance from closest point
+            distance_x = self.ball.x - closest_x
+            distance_y = self.ball.y - closest_y
+            distance_squared = distance_x**2 + distance_y**2
+    
+            # Check collision
+            if distance_squared <= self.ball.radius**2:
                 destroyed = b.hit()
-                self.ball.vy *= -1
+        
+                # Determine bounce direction based on hit location
+                if abs(distance_x) > abs(distance_y):
+                    # Hit from left/right
+                    self.ball.vx *= -1
+                else:
+                    # Hit from top/bottom
+                    self.ball.vy *= -1
+            
                 if destroyed:
                     self.score += b.score
                 else:
                     remaining.append(b)
             else:
                 remaining.append(b)
-        # for b in self.blocks:
 
         self.blocks = remaining
 

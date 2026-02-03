@@ -28,3 +28,12 @@ BALL_SPEED = 300.0
 #
 LEVELS_DIR = "Assets\\levels\\"
 
+# Game states
+GAME_STATES = {
+    "MENU": 0,
+    "PLAYING": 1,
+    "PAUSED": 2,
+    "LEVEL_COMPLETE": 3,
+    "GAME_OVER": 4,
+    "LIFE_LOST": 5,
+}
