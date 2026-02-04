@@ -1,0 +1,10 @@
+{
+  "width": 800,
+  "height": 600,
+  "tile_size": 40,
+  "blocks": [
+    {"x": 9, "y": 4, "type": "normal", "hp": 1, "score": 100, "color": "#00FF00", "width": 50, "height": 20},
+    {"x": 9, "y": 5, "type": "normal", "hp": 1, "score": 100, "color": "#00FF00", "width": 50, "height": 20},
+    {"x": 9, "y": 6, "type": "normal", "hp": 1, "score": 100, "color": "#00FF00", "width": 50, "height": 20}
+  ]
+}

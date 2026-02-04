@@ -1,5 +1,17 @@
 # Breakout Game
 
+## **Gameplay**
+
+### Controls:
+
+    P - Pause
+    R - Restart
+    W - Paddle Left
+    < - Paddle Left
+    D - Paddle Right
+    > - Paddle Right
+    Space - Launch Ball
+
 ## **Software:**
 
 ### Python:
