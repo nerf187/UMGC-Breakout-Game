@@ -1,3 +1,4 @@
+from turtle import title
 from typing import Tuple
 import pygame
 from Core import config
@@ -8,7 +9,7 @@ def hex_to_rgb(hexstr: str) -> Tuple[int, int, int]:
         return (255, 255, 255)
     return tuple(int(s[i:i+2], 16) for i in (0, 2, 4))
 
-class MenuManager:
+class menu:
     def __init__(self):
         # Initialize fonts
         self.font_large = pygame.font.SysFont(None, 72)
@@ -48,37 +49,59 @@ class MenuManager:
         screen.blit(pause_text, (config.SCREEN_WIDTH//2 - pause_text.get_width()//2, 200))
         screen.blit(continue_text, (config.SCREEN_WIDTH//2 - continue_text.get_width()//2, 280))
     
-    # Draw game over or level complete screen
+    # game over - death or all levels complete
     def draw_game_over(self, screen: pygame.Surface, lives: int, score: int) -> None:
         screen.fill((0, 0, 0))
         
         if lives <= 0:
             title = self.font_large.render("GAME OVER", True, self.colors['red'])
             restart_text = self.font_medium.render("Press R to Restart", True, self.colors['light_gray'])
-
         else:
-            title = self.font_large.render("LEVEL COMPLETE!", True, self.colors['green'])
-            restart_text = self.font_medium.render("Press Space to Continue", True, self.colors['light_gray'])
-            
+            title = self.font_large.render("YOU WIN!", True, self.colors['green'])
+            restart_text = self.font_medium.render("Press R to Restart", True, self.colors['light_gray'])
 
         score_text = self.font_medium.render(f"Final Score: {score}", True, self.colors['white'])
         quit_text = self.font_medium.render("Press ESC to Quit", True, self.colors['light_gray'])
-        restart_text = self.font_medium.render("Press R to Restart", True, self.colors['light_gray'])
 
         screen.blit(title, (config.SCREEN_WIDTH//2 - title.get_width()//2, 150))
         screen.blit(score_text, (config.SCREEN_WIDTH//2 - score_text.get_width()//2, 250))
         screen.blit(restart_text, (config.SCREEN_WIDTH//2 - restart_text.get_width()//2, 300))
         screen.blit(quit_text, (config.SCREEN_WIDTH//2 - quit_text.get_width()//2, 350))
     
-    # Draw the heads-up display (score and lives)
-    def draw_hud(self, screen: pygame.Surface, score: int, lives: int) -> None:
+    # level complete
+    def draw_next_level(self, screen: pygame.Surface, level_num: int, score: int) -> None:
+        screen.fill((0, 0, 0))
+        
+        title = self.font_large.render(f"LEVEL {level_num} COMPLETE!", True, self.colors['green'])
+        score_text = self.font_medium.render(f"Score: {score}", True, self.colors['white'])
+        next_text = self.font_medium.render("Press SPACE for Next Level", True, self.colors['light_gray'])
+        restart_text = self.font_medium.render("Press R to Replay Level", True, self.colors['light_gray'])
+        quit_text = self.font_medium.render("Press ESC to Quit", True, self.colors['light_gray'])
+        
+        screen.blit(title, (config.SCREEN_WIDTH//2 - title.get_width()//2, 150))
+        screen.blit(score_text, (config.SCREEN_WIDTH//2 - score_text.get_width()//2, 250))
+        screen.blit(next_text, (config.SCREEN_WIDTH//2 - next_text.get_width()//2, 300))
+        screen.blit(restart_text, (config.SCREEN_WIDTH//2 - restart_text.get_width()//2, 350))
+        screen.blit(quit_text, (config.SCREEN_WIDTH//2 - quit_text.get_width()//2, 400))
+
+    def draw_hud(self, screen: pygame.Surface, score: int, lives: int, level_num: int) -> None:
+        # Score and lives
         hud_text = self.font_small.render(f"Score: {score}  Lives: {lives}", True, self.colors['white'])
         screen.blit(hud_text, (8, 8))
+        
+        # Level number
+        level_text = self.font_small.render(f"Level: {level_num}", True, self.colors['white'])
+        screen.blit(level_text, (config.SCREEN_WIDTH - level_text.get_width() - 8, 8))
     
-    # Helper to draw centered text
+    def draw_launch_hint(self, screen: pygame.Surface) -> None:
+        hint = self.font_small.render("Press SPACE to Launch", True, self.colors['light_gray'])
+        screen.blit(hint, (config.SCREEN_WIDTH//2 - hint.get_width()//2, 
+                          config.SCREEN_HEIGHT - 100))
+    
     def draw_centered_text(self, screen: pygame.Surface, text: str, font_type: str = 'medium', 
                           y_offset: int = 0, color: str = 'white') -> None:
         font = getattr(self, f'font_{font_type}')
         rendered = font.render(text, True, self.colors[color])
         x = config.SCREEN_WIDTH // 2 - rendered.get_width() // 2
         screen.blit(rendered, (x, config.SCREEN_HEIGHT // 2 + y_offset))
+        

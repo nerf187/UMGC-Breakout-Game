@@ -1,7 +1,6 @@
 #
 # Auto-detect and use virtual environment if available
 #
-from enum import Enum
 import os
 import sys
 
@@ -20,50 +19,21 @@ if os.path.exists(venv_python) and sys.executable != venv_python:
 # `Block`, `Paddle`, and `Ball` objects. A headless test mode is provided via
 # the `--headless` CLI flag to run a small smoke test without opening a window.
 #
-from typing import Tuple
-
 import pygame
 
 from Core import config
-from Objects.level import Level
 from Objects.paddle import Paddle
 from Objects.ball import Ball
-from UI.menu import MenuManager, hex_to_rgb  # CHANGED: Import from UI module
+from UI.menu import menu, hex_to_rgb
+from Managers import GameState, collisionManager, inputManager, scoreManager
 
-class GameState(Enum):
-    MENU = 0
-    PLAYING = 1
-    PAUSED = 2
-    LEVEL_COMPLETE = 3
-    GAME_OVER = 4
-    LIFE_LOST = 5
-
-#
-# Simple Breakout game runner handling input, update and render.
-#
 class Game:
-    def __init__(self, level_path: str):
+    def __init__(self, initial_level: int = 1):
         pygame.init()
         self.screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
-        pygame.display.set_caption("Breakout - Test")
+        pygame.display.set_caption("Breakout")
         self.clock = pygame.time.Clock()
-
-        self.level = Level.from_file(level_path)
-        self.blocks = list(self.level.blocks)
-
-        #
-        # Paddle positioned near bottom center
-        #
-        paddle_y = config.SCREEN_HEIGHT - 40
-        self.paddle = Paddle(config.SCREEN_WIDTH / 2, paddle_y)  # paddle init
-
-        #
-        # Ball starts on top of paddle
-        #
-        ball_x = self.paddle.x
-        ball_y = self.paddle.y - self.paddle.height / 2 - config.BALL_RADIUS - 2
-        self.ball = Ball(ball_x, ball_y)
-
+        
         # Game state
         self.game_state = GameState.MENU
         self.running = True
@@ -71,12 +41,20 @@ class Game:
         self.lives = 3
         self.ball_launched = False
         
-        # UI Manager
-        self.ui = MenuManager()
-
-    def reset_game_state(self):
-        self.blocks = list(self.level.blocks)
+        # Managers
+        self.ui = menu()
+        self.level_manager = scoreManager()
         
+        # Load initial level
+        if not self.level_manager.load_level(initial_level):
+            print(f"Failed to load level {initial_level}")
+            self.running = False
+            return
+        
+        # Initialize game objects
+        self.reset_paddle_and_ball()
+
+    def reset_paddle_and_ball(self) -> None:
         # Paddle positioned near bottom center
         paddle_y = config.SCREEN_HEIGHT - 40
         self.paddle = Paddle(config.SCREEN_WIDTH / 2, paddle_y)
@@ -85,131 +63,85 @@ class Game:
         ball_x = self.paddle.x
         ball_y = self.paddle.y - self.paddle.height / 2 - config.BALL_RADIUS - 2
         self.ball = Ball(ball_x, ball_y)
-        
-        self.score = 0
-        self.lives = 3
         self.ball_launched = False
 
-    def handle_input(self, dt: float) -> None:
-        keys = pygame.key.get_pressed()
-        dir = 0.0
-        
-        if self.game_state == GameState.PLAYING:
-            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-                dir -= 1.0
-            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                dir += 1.0
-        
-        # Only move paddle if we're playing
-        if self.game_state == GameState.PLAYING:
-            self.paddle.move(dir, dt)
+    def reset_level_state(self) -> None:
+        self.level_manager.reset_level_blocks()
+        self.reset_paddle_and_ball()
+
+    def reset_game_state(self) -> None:
+        self.level_manager.reset_level_blocks()
+        self.lives = 3
+        self.score = 0
+        self.reset_paddle_and_ball()
+
+    def next_level(self) -> None:
+        success, message = self.level_manager.next_level()
+        if success:
+            self.reset_paddle_and_ball()
+            self.game_state = GameState.PLAYING
+        else:   # No more levels = game complete
+            self.game_state = GameState.GAME_OVER
+            print(message)
 
     def launch_ball_if_needed(self) -> None:
         if not self.ball_launched:
-            #
-            # Keep ball above paddle until launched
-            #
-            if pygame.key.get_pressed()[pygame.K_SPACE]:
-                self.ball_launched = True  # space to launch
-                #
-                # Give initial velocity
-                #
+            self.ui.draw_launch_hint(self.screen)
+            pygame.display.flip()
+            keys = pygame.key.get_pressed()
+            if inputManager.check_launch_ball(keys, self.ball_launched):
+                self.ball_launched = True
                 self.ball.vx = 0.0
-                self.ball.vy = -1.0  # set initial velocity
+                self.ball.vy = -1.0
 
     def update(self, dt: float) -> None:
+        if self.game_state != GameState.PLAYING:
+            return
+            
         if not self.ball_launched:
             self.launch_ball_if_needed()
-            # keep ball on paddle
+            # Keep ball on paddle
             self.ball.x = self.paddle.x
             self.ball.y = self.paddle.y - self.paddle.height / 2 - self.ball.radius - 2
             return
 
         self.ball.update(dt)
 
-        #
-        # Wall collisions
-        #
-        if self.ball.x - self.ball.radius <= 0:  # left wall
-            self.ball.x = self.ball.radius
-            self.ball.vx = abs(self.ball.vx)  # reflect right
-        if self.ball.x + self.ball.radius >= config.SCREEN_WIDTH:  # right wall
-            self.ball.x = config.SCREEN_WIDTH - self.ball.radius
-            self.ball.vx = -abs(self.ball.vx)  # reflect left
-        if self.ball.y - self.ball.radius <= 0:  # top wall
-            self.ball.y = self.ball.radius
-            self.ball.vy = abs(self.ball.vy)  # reflect down
-
-        #
-        # Bottom (life loss)
-        #
-        if self.ball.y - self.ball.radius > config.SCREEN_HEIGHT:  # ball fell
-            self.lives -= 1
-            if self.lives <= 0:
-                self.game_state = GameState.GAME_OVER
-                return
-
-            self.ball_launched = False
-            # reset ball above paddle
-            self.ball.x = self.paddle.x
-            self.ball.y = self.paddle.y - self.paddle.height / 2 - self.ball.radius - 2
-            self.ball.vx = 0.0
-            self.ball.vy = -1.0
-
-        #
-        # Paddle collision (AABB vs circle simple approximation)
-        #
-        px, py, pw, ph = self.paddle.rect()
-        bx, by, bw, bh = self.ball.rect()
-        if (bx < px + pw and bx + bw > px and by < py + ph and by + bh > py):
-            #
-            # Reflect upward and adjust vx based on hit location on paddle
-            #
-            if self.ball.vy > 0:
-                self.ball.bounce_from_paddle(self.paddle.x, self.paddle.width)
-                # position ball above paddle to prevent sticking
-                self.ball.y = py - self.ball.radius - 1
-
-        #
-        # Block collisions
-        #
-        remaining = []
-        for b in self.blocks:
-            bx, by, bw, bh = b.rect()
-    
-            # Find closest point on block to ball
-            closest_x = max(bx, min(self.ball.x, bx + bw))
-            closest_y = max(by, min(self.ball.y, by + bh))
-    
-            # Calculate distance from closest point
-            distance_x = self.ball.x - closest_x
-            distance_y = self.ball.y - closest_y
-            distance_squared = distance_x**2 + distance_y**2
-    
-            # Check collision
-            if distance_squared <= self.ball.radius**2:
-                destroyed = b.hit()
+        # Check collisions
+        collisionManager.check_ball_walls(self.ball)
         
-                # Determine bounce direction based on hit location
-                if abs(distance_x) > abs(distance_y):
-                    # Hit from left/right
-                    self.ball.vx *= -1
-                else:
-                    # Hit from top/bottom
-                    self.ball.vy *= -1
+        # Check bottom collision (life loss)
+        if collisionManager.check_ball_bottom(self.ball):
+            self.handle_life_loss()
+            return
             
-                if destroyed:
-                    self.score += b.score
-                else:
-                    remaining.append(b)
-            else:
-                remaining.append(b)
-
-        self.blocks = remaining
-
+        # Check paddle collision
+        collisionManager.check_ball_paddle(self.ball, self.paddle)
+        
+        # Check block collisions
+        self.level_manager.blocks, score_increase = collisionManager.check_ball_blocks(
+            self.ball, self.level_manager.blocks
+        )
+        self.score += score_increase
+        
         # Check level completion
-        if len(self.blocks) == 0:
+        if len(self.level_manager.blocks) == 0:
             self.game_state = GameState.LEVEL_COMPLETE
+
+    #
+    # Bottom (life loss)
+    #
+    def handle_life_loss(self) -> None:
+        self.lives -= 1
+        if self.lives <= 0:
+            self.game_state = GameState.GAME_OVER
+            return
+            
+        self.ball_launched = False
+        self.ball.x = self.paddle.x
+        self.ball.y = self.paddle.y - self.paddle.height / 2 - self.ball.radius - 2
+        self.ball.vx = 0.0
+        self.ball.vy = -1.0
 
     def render(self) -> None:
         self.screen.fill((0, 0, 0))
@@ -217,9 +149,9 @@ class Game:
         #
         # Draw blocks
         #
-        for b in self.blocks:  # draw each block
-            r = b.rect()
-            color = hex_to_rgb(b.color)
+        for block in self.level_manager.blocks:
+            r = block.rect()
+            color = hex_to_rgb(block.color)
             pygame.draw.rect(self.screen, color, pygame.Rect(*r))
             #
             # Draw white outline
@@ -231,67 +163,78 @@ class Game:
         #
         pr = self.paddle.rect()
         pygame.draw.rect(self.screen, (200, 200, 200), pygame.Rect(*pr))
-
         #
         # Draw ball
         #
         pygame.draw.circle(self.screen, (255, 255, 255), (int(self.ball.x), int(self.ball.y)), self.ball.radius)
-
         #
         # HUD
         #
-        self.ui.draw_hud(self.screen, self.score, self.lives)
+        level_info = self.level_manager.get_level_info()
+        self.ui.draw_hud(self.screen, self.score, self.lives, level_info["number"])
 
-        pygame.display.flip()
+    def process_actions(self, action: str) -> None:
+        if action == "next_level":
+            self.next_level()
+
+        elif action == "restart_level":
+            self.reset_level_state()
+            self.game_state = GameState.PLAYING
+
+        elif action == "restart_game":
+            self.level_manager.load_level(1)
+            self.score = 0
+            self.reset_game_state()
+            self.game_state = GameState.PLAYING
+
+        elif action == "retry_level":
+            self.reset_level_state()
+            self.game_state = GameState.PLAYING
 
     def run(self, max_frames: int = None) -> None:
         frames = 0
         while self.running:
             dt = self.clock.tick(config.FPS) / 1000.0
-
-            # event handling
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
-
-                    # game state transitions
-                    if self.game_state == GameState.MENU:
-                        if event.key == pygame.K_SPACE:
-                            self.game_state = GameState.PLAYING
-                    
-                    elif self.game_state == GameState.PLAYING:
-                        if event.key == pygame.K_p:
-                            self.game_state = GameState.PAUSED
-                    
-                    elif self.game_state == GameState.PAUSED:
-                        if event.key == pygame.K_p:
-                            self.game_state = GameState.PLAYING
-                    
-                    elif self.game_state in [GameState.GAME_OVER, GameState.LEVEL_COMPLETE]:
-                        if event.key == pygame.K_r:
-                            self.reset_game_state()
-                            self.game_state = GameState.PLAYING
-
-            # Update based on game state
+            
+            # Get events
+            events = pygame.event.get()
+            
+            # Handle input and state transitions
+            self.game_state, self.running, action = inputManager.handle_state_transitions(
+                events, self.game_state, self.running
+            )
+            
+            # Process actions
+            if action:
+                self.process_actions(action)
+            
+            # Handle game input (paddle movement)
+            inputManager.handle_game_input(events, self.game_state, self.paddle, dt)
+            
+            # Update and render based on game state
             if self.game_state == GameState.MENU:
                 self.ui.draw_menu(self.screen)
                 pygame.display.flip()
                 
             elif self.game_state == GameState.PLAYING:
-                self.handle_input(dt)
                 self.update(dt)
                 self.render()
+                if not self.ball_launched:
+                    self.ui.draw_launch_hint(self.screen)
+                pygame.display.flip()
                 
             elif self.game_state == GameState.PAUSED:
-                self.render()  # Draw game in background
+                self.render()
                 self.ui.draw_pause_screen(self.screen)
                 pygame.display.flip()
                 
-            elif self.game_state in [GameState.GAME_OVER, GameState.LEVEL_COMPLETE]:
+            elif self.game_state == GameState.LEVEL_COMPLETE:
+                level_info = self.level_manager.get_level_info()
+                self.ui.draw_next_level(self.screen, level_info["number"], self.score)
+                pygame.display.flip()
+                
+            elif self.game_state == GameState.GAME_OVER:
+                level_info = self.level_manager.get_level_info()
                 self.ui.draw_game_over(self.screen, self.lives, self.score)
                 pygame.display.flip()
 
@@ -301,21 +244,25 @@ class Game:
 
         pygame.quit()
 
-
 def main(argv=None):
     argv = argv or sys.argv[1:]
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    level_path = os.path.join(base_dir, config.LEVELS_DIR, "testlevel.json")
-    if not os.path.exists(level_path):
-        print("Level file not found:", level_path)  # if level file path exists
-        return
-
-    # headless test mode (run small number of frames and exit)
+    
+    # Check for level parameter
+    start_level = 1
+    for arg in argv:
+        if arg.startswith("--level="):
+            try:
+                start_level = int(arg.split("=")[1])
+            except ValueError:
+                print(f"Invalid level number: {arg}")
+                return
+    
+    # headless test mode
     headless = "--headless" in argv
     if headless:
-        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")  # set dummy video driver
-
-    game = Game(level_path)
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy") # set dummy video driver
+    
+    game = Game(initial_level=start_level)
     if headless:
         game.run(max_frames=10)  # run a short headless smoke test
     else:
@@ -324,4 +271,3 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-    
