@@ -36,6 +36,47 @@ class menu:
         screen.blit(start, (config.SCREEN_WIDTH//2 - start.get_width()//2, 250))
         screen.blit(quit_text, (config.SCREEN_WIDTH//2 - quit_text.get_width()//2, 300))
     
+    def draw_level_select(self, screen: pygame.Surface, available_levels: list, selected_index: int) -> None:
+        """Draw level selection screen with available levels.
+        
+        Args:
+            screen: Pygame surface to draw on
+            available_levels: List of available level numbers
+            selected_index: Index of currently selected level
+        """
+        screen.fill((0, 0, 0))
+        
+        #
+        # Title
+        # Mike: Added a level select feature so that we can more easily test
+        # levels, as we add more of them.
+        #
+        title = self.font_large.render("SELECT LEVEL", True, self.colors['white'])
+        screen.blit(title, (config.SCREEN_WIDTH//2 - title.get_width()//2, 80))
+        
+        # Draw level options
+        start_y = 180
+        button_height = 50
+        button_padding = 20
+        
+        for i, level_num in enumerate(available_levels):
+            y_pos = start_y + i * (button_height + button_padding)
+            
+            # Highlight selected level
+            if i == selected_index:
+                color = self.colors['green']
+                prefix = ">> "
+            else:
+                color = self.colors['light_gray']
+                prefix = "   "
+            
+            level_text = self.font_medium.render(f"{prefix}LEVEL {level_num}", True, color)
+            screen.blit(level_text, (config.SCREEN_WIDTH//2 - level_text.get_width()//2, y_pos))
+        
+        # Instructions
+        instructions = self.font_small.render("Use UP/DOWN arrows to select, ENTER to confirm", True, self.colors['light_gray'])
+        screen.blit(instructions, (config.SCREEN_WIDTH//2 - instructions.get_width()//2, config.SCREEN_HEIGHT - 100))
+    
     def draw_pause_screen(self, screen: pygame.Surface) -> None:
         # Draw semi-transparent overlay
         overlay = pygame.Surface((config.SCREEN_WIDTH, config.SCREEN_HEIGHT), pygame.SRCALPHA)

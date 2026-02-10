@@ -45,6 +45,10 @@ class Game:
         self.ui = menu()
         self.level_manager = scoreManager()
         
+        # Level selection
+        self.available_levels = self.level_manager.get_available_levels()
+        self.selected_level_index = 0  # Index in available_levels list
+        
         # Load initial level
         if not self.level_manager.load_level(initial_level):
             print(f"Failed to load level {initial_level}")
@@ -174,7 +178,26 @@ class Game:
         self.ui.draw_hud(self.screen, self.score, self.lives, level_info["number"])
 
     def process_actions(self, action: str) -> None:
-        if action == "next_level":
+        if action == "open_level_select":
+            self.available_levels = self.level_manager.get_available_levels()
+            self.selected_level_index = 0
+        
+        elif action == "select_prev_level":
+            if self.selected_level_index > 0:
+                self.selected_level_index -= 1
+        
+        elif action == "select_next_level":
+            if self.selected_level_index < len(self.available_levels) - 1:
+                self.selected_level_index += 1
+        
+        elif action == "start_selected_level":
+            selected_level = self.available_levels[self.selected_level_index]
+            self.level_manager.load_level(selected_level)
+            self.score = 0
+            self.lives = 3
+            self.reset_level_state()
+        
+        elif action == "next_level":
             self.next_level()
 
         elif action == "restart_level":
@@ -214,6 +237,10 @@ class Game:
             # Update and render based on game state
             if self.game_state == GameState.MENU:
                 self.ui.draw_menu(self.screen)
+                pygame.display.flip()
+                
+            elif self.game_state == GameState.LEVEL_SELECT:
+                self.ui.draw_level_select(self.screen, self.available_levels, self.selected_level_index)
                 pygame.display.flip()
                 
             elif self.game_state == GameState.PLAYING:

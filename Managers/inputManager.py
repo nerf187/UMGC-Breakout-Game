@@ -39,7 +39,15 @@ class inputManager:
                 # Game state transitions
                 if game_state == GameState.MENU:
                     if event.key == pygame.K_SPACE:
-                        return GameState.PLAYING, running, "start_game"
+                        return GameState.LEVEL_SELECT, running, "open_level_select"
+                
+                elif game_state == GameState.LEVEL_SELECT:
+                    if event.key == pygame.K_UP:
+                        return game_state, running, "select_prev_level"
+                    elif event.key == pygame.K_DOWN:
+                        return game_state, running, "select_next_level"
+                    elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                        return GameState.PLAYING, running, "start_selected_level"
                 
                 elif game_state == GameState.PLAYING:
                     if event.key == pygame.K_p:
