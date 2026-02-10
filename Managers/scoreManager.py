@@ -109,3 +109,11 @@ class scoreManager:
         destroyed = total - remaining
         
         return (destroyed / total) * 100.0 if total > 0 else 0.0
+    
+    def get_available_levels(self) -> List[int]:
+        """Return a list of available level numbers."""
+        levels = []
+        for level_num in range(1, self.total_levels + 1):
+            if self.level_exists(level_num):
+                levels.append(level_num)
+        return levels
