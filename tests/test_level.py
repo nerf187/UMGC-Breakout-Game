@@ -52,8 +52,9 @@ def test_all_levels_load():
     # Test that every levelX.json file in assets/ can be loaded.
     # Assumes assets/ is at project root.
     #
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    assets_dir = config.LEVELS_DIR
+    # Resolve configured relative levels directory to an absolute path
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    assets_dir = os.path.join(repo_root, config.LEVELS_DIR)
     
     # find all level files
     level_files = []
